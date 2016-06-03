@@ -14,6 +14,8 @@
 //-----------------------------------------|
 const uint32_t max_iterations = 400;
 const float max_distance = 25.0f;
+const float ao_steps = 5.0f;
+const uint32_t normal_iterations = 5;
 
 const float3 light_dir = glm::normalize(float3(0.64, 0.57, 0.52)); //I choose those to be constant. For simplicity sake
 const float3 light_color = float3(1, 1, 1);
@@ -31,7 +33,7 @@ uint32_t width = 200;
 uint32_t height = 200;
 uint32_t pixel_count = width * height;
 
-float3 camera_pos(0, 0, -15);
+float3 camera_pos(0, 0, -10);
 float3 camera_view(0, 0, 1);
 float3 camera_up(0, 1, 0);
 float3 camera_side(1, 0, 0);
@@ -39,11 +41,53 @@ float fov = 0.3f * PI; //horizontal
 float tan_hori = glm::tan(fov);
 float tan_vert = glm::tan(fov);
 
+float ao_offset = 0.05f;
+
+//-----------------------------------------|
+// functions for ray tracing and image     |
+// generation in general. Here you find    |
+// everything that is not really tied to   |
+// the fractal itself. Meaning the mandel- |
+// box specific funtions can be replaced   |
+// to render another fractal.              |
+//-----------------------------------------|
+
+float3 approxNormal(const float3& pos)
+{
+	float h = 2.0f * EPS;
+	float3 normal = float3(0, 0, 0);
+	float normal_length = 0.0f;
+
+	for (uint32_t i = 0; i<normal_iterations && normal_length < EPS; i++)
+	{
+		normal.x = mandelBoxGetDistance(float3(pos.x + h, pos.y, pos.z)) - mandelBoxGetDistance(float3(pos.x - h, pos.y, pos.z));
+		normal.y = mandelBoxGetDistance(float3(pos.x, pos.y + h, pos.z)) - mandelBoxGetDistance(float3(pos.x, pos.y - h, pos.z));
+		normal.z = mandelBoxGetDistance(float3(pos.x, pos.y, pos.z + h)) - mandelBoxGetDistance(float3(pos.x, pos.y, pos.z - h));
+
+		normal_length = glm::length(normal);
+		h += EPS;
+	}
+	assert(normal_length>0.0f);
+
+	return normal / normal_length;
+}
+
+float approxAmbientOcclusion(const float3& pos, const float3& normal)
+{
+	float walked_dist = ao_offset; //we need to offset from the start since we are approximating the fractal via a distance threshold
+	for (float i = 0.0f; i < ao_steps; i += 1.0f) //simple ray marching
+	{
+		float3 test_pos = pos + normal * walked_dist; //march along the normal and test for the closest point of the fractal
+		walked_dist += mandelBoxGetDistance(test_pos); 
+	}
+	return glm::min(1.0f,walked_dist / (ao_offset * (ao_steps + 1.0f))); //divide by the amount we could have idially traveled
+}
+
 int32_t rayTrace(float3& ray_pos, const float3& ray_dir, const float& pixel_radius, float& distance)
 {
 	distance = 0.0f;
 	
-	for (uint32_t it = 0; it < max_iterations; it++)
+	for (uint32_t it = 0; it < max_iterations; it++) //do the ray tracing
 	{
 		float d = mandelBoxGetDistance(ray_pos);
 
@@ -55,7 +99,7 @@ int32_t rayTrace(float3& ray_pos, const float3& ray_dir, const float& pixel_radi
 			return 1;
 		}
 
-		if (distance > max_distance)
+		if (distance > max_distance) //terminate at max distance
 		{
 			return -1;
 		}
@@ -73,37 +117,40 @@ void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& 
 
 	float3& pixel = image[y*width+x];
 
+	//calculated the ray direction
 	float3 ray_dir = camera_view + camera_side * tan_hori * s + camera_up * tan_vert * t;
 	ray_dir = glm::normalize(ray_dir);
 
-	float pixel_radius = tan_hori / float(width) * 0.25f; //0.5 half side * 0.5 radius
+	float pixel_radius = tan_hori / (float(width) * 0.5f) * 0.5f; //0.5 half side; 0.5 radius
 
+	//init and do the ray tracing
 	float distance = 0.0f;
 	float3 fractal_pos = camera_pos;
 
 	int32_t res = rayTrace(fractal_pos, ray_dir, pixel_radius, distance);
 
-	if (res > 0)
+	if (res > 0) //we actually hit the fractal
 	{
+		//gather attributes of the hit
 		float3 surface_normal = mandelboxGetNormal(fractal_pos);
 		surface_normal = glm::normalize(surface_normal);
 		float3 surface_color = mandelboxGetColor(fractal_pos);
-		float surface_ao = mandelboxGetAmbientOcclusion(fractal_pos, surface_normal, distance * pixel_radius); //TODO 2 times the pixel radius seems about right :)
-		//float surface_ao = mandelboxGetAmbientOcclusion(fractal_pos, -ray_dir, distance * pixel_radius);
-		//float surface_ao = mandelboxGetAmbientOcclusion(fractal_pos, surface_normal, 0.1f);
+		float surface_ao = approxAmbientOcclusion(fractal_pos, surface_normal);
 
 		float3 ambient_color = surface_color * surface_ao * 0.2f;
 		float3 diffuse_color = surface_color * 0.4f;
 		float3 specular_color = float3(1,1,1) * 0.4f;
 
+		//do the lighting and write to our image buffer
 		float3 blinn_phong = brdfBlinnPhong(surface_normal, ambient_color, diffuse_color, specular_color, -ray_dir, light_dir, light_color);
 
-		//pixel = glm::pow(blinn_phong, float3(inverse_gamma, inverse_gamma, inverse_gamma));
-		pixel = float3(surface_ao, surface_ao, surface_ao);
-		//pixel = glm::abs(surface_normal);
-		//pixel = float3(distance, distance, distance);
+		pixel = glm::pow(blinn_phong, float3(inverse_gamma, inverse_gamma, inverse_gamma));
 	}
 }
+
+//-----------------------------------------|
+// Main                                    |
+//-----------------------------------------|
 
 bool startsWith(const char *pre, const char *str) {
 	size_t len_pre = strlen(pre);
@@ -171,10 +218,19 @@ int32_t main(int32_t argc, char** argv)
 		else if (startsWith("fov:", arg))
 		{
 			float tmp = 0;
-			int32_t res = sscanf(arg+4, "%f", &tmp);
+			int32_t res = sscanf(arg + 4, "%f", &tmp);
 			if (res == 1)
 			{
 				fov = glm::clamp(PI * tmp / 180.0f, PI * 0.523599f, PI * 0.666666f) * 0.5f; //from 30 to 120 degrees and we want half the fov for our calculations
+			}
+		}
+		else if (startsWith("ao:", arg))
+		{
+			float tmp = 0;
+			int32_t res = sscanf(arg + 3, "%f", &tmp);
+			if (res == 1)
+			{
+				ao_offset = tmp;
 			}
 		}
 	}
@@ -188,20 +244,17 @@ int32_t main(int32_t argc, char** argv)
 	image = new float3[width*height]; //TODO do allocation check
 	std::memset(image, 0, sizeof(float3)*width*height);
 
-	/*#pragma omp parallel for schedule(dynamic,1)
+	#pragma omp parallel for schedule(dynamic,1)
 	for (int32_t pixel_num = 0; pixel_num < pixel_count; pixel_num++) 
 	{
 		uint32_t pn = uint32_t(pixel_num);
 		uint32_t x = pn % width;
-		uint32_t y = pn / width;*/
-	{
-		uint32_t x = 276;
-		uint32_t y = 264;
-		uint32_t pn = y*width + x;
+		uint32_t y = pn / width;
 
 		renderThread(pn, x, y);
 	}
 
+	//write the image to the file and delete the buffer
 	ret = saveFloatImagePFM(argv[1], (float*)image, width, height);
 
 	safe_delete_a(image);
