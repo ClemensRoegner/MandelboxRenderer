@@ -1,9 +1,14 @@
+/////////////////////////////////////////////////
+/// Contains declerations for image.h
+/// by Clemens Roegner 2016
+/////////////////////////////////////////////////
+
 #include "image.h"
 
 #include <stdio.h>
 
 /// <summary>
-/// Saves a buffer of float triplets to a file on the disk.
+/// Saves a buffer of float triplets to a file on the disk. This function follows the definition of the PFM format, described by Paul Debevec at http://www.pauldebevec.com/Research/HDR/PFM/
 /// </summary>
 /// <param name="filename">The filename/path.</param>
 /// <param name="img">Pointer to the buffer containing the float triplets.</param>
