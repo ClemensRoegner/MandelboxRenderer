@@ -1,7 +1,7 @@
-/////////////////////////////////////////////////
-/// Contains declerations for brdf.h
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains declerations for brdf.h
+ * by Clemens Roegner 2016
+ */
 
 #include "brdf.h"
 

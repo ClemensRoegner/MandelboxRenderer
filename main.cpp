@@ -1,8 +1,8 @@
-/////////////////////////////////////////////////
-/// Contains the main functionality of this
-/// simple Mandelbox renderer
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains the main functionality of this
+ * simple Mandelbox renderer
+ * by Clemens Roegner 2016
+ */
 
 #include <cstring>
 #include <iostream>

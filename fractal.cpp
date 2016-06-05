@@ -1,7 +1,7 @@
-/////////////////////////////////////////////////
-/// Contains declerations for fractal.h
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains declerations for fractal.h
+ * by Clemens Roegner 2016
+ */
 
 #include "fractal.h"
 

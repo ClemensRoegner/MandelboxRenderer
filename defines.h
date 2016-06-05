@@ -1,7 +1,7 @@
-/////////////////////////////////////////////////
-/// Includes definitions that make coding easier
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Includes definitions that make coding easier
+ * by Clemens Roegner 2016
+ */
 
 #pragma once
 

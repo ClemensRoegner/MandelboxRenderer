@@ -1,7 +1,7 @@
-/////////////////////////////////////////////////
-/// Contains functionaliy to shade a pixel
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains functionaliy to shade a pixel
+ * by Clemens Roegner 2016
+ */
 
 #pragma once
 

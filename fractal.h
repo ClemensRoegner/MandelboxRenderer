@@ -1,9 +1,9 @@
-/////////////////////////////////////////////////
-/// Contains functionaliy that defines our
-/// Mandelbox fractal as described at
-/// https://sites.google.com/site/mandelbox/what-is-a-mandelbox
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains functionaliy that defines our
+ * Mandelbox fractal as described at
+ * https://sites.google.com/site/mandelbox/what-is-a-mandelbox
+ * by Clemens Roegner 2016
+ */
 
 #pragma once
 

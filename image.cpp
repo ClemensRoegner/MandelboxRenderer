@@ -1,7 +1,7 @@
-/////////////////////////////////////////////////
-/// Contains declerations for image.h
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains declerations for image.h
+ * by Clemens Roegner 2016
+ */
 
 #include "image.h"
 

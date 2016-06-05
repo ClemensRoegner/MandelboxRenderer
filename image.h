@@ -1,8 +1,8 @@
-/////////////////////////////////////////////////
-/// Contains functionaliy to save an image
-/// to the hard drive
-/// by Clemens Roegner 2016
-/////////////////////////////////////////////////
+/**
+ * Contains functionaliy to save an image
+ * to the hard drive
+ * by Clemens Roegner 2016
+ */
 
 #pragma once
 
