@@ -52,6 +52,11 @@ float ao_offset = 0.05f;
 // to render another fractal.              |
 //-----------------------------------------|
 
+/// <summary>
+/// Approximates the normal vector for the mandelbox fractal.
+/// </summary>
+/// <param name="pos">The position on the fractal for which the normal should be approximated.</param>
+/// <returns>A normalized vector that represents the surface orientation.</returns>
 float3 approxNormal(const float3& pos)
 {
 	float h = 2.0f * EPS;
@@ -72,6 +77,13 @@ float3 approxNormal(const float3& pos)
 	return normal / normal_length;
 }
 
+
+/// <summary>
+/// Approxes the ambient occlusion for the mandelbox fractal. Works with ao_radius to determin the area on which to check for occluders.
+/// </summary>
+/// <param name="pos">The position on the fractal for which the AO should be approximated.</param>
+/// <param name="normal">The surface normal for pos.</param>
+/// <returns>A value from 0 up to 1 representaing the AO</returns>
 float approxAmbientOcclusion(const float3& pos, const float3& normal)
 {
 	float walked_dist = ao_offset; //we need to offset from the start since we are approximating the fractal via a distance threshold
@@ -83,7 +95,15 @@ float approxAmbientOcclusion(const float3& pos, const float3& normal)
 	return glm::min(1.0f,walked_dist / (ao_offset * (ao_steps + 1.0f))); //divide by the amount we could have idially traveled
 }
 
-int32_t rayTrace(float3& ray_pos, const float3& ray_dir, const float& pixel_radius, float& distance)
+/// <summary>
+/// Ray traces the mandelbox. Termination via max_iterations.
+/// </summary>
+/// <param name="ray_pos">Startin position.</param>
+/// <param name="ray_dir">Ray direction.</param>
+/// <param name="pixel_radius">The inital pixels radius. Used to terminate the marching</param>
+/// <param name="distance">[OUT] The distance of the ray marching until termination.</param>
+/// <returns>true if the fractal was hit, false otherwise</returns>
+bool rayTrace(float3& ray_pos, const float3& ray_dir, const float& pixel_radius, float& distance)
 {
 	distance = 0.0f;
 	
@@ -96,26 +116,33 @@ int32_t rayTrace(float3& ray_pos, const float3& ray_dir, const float& pixel_radi
 
 		if (d < (pixel_radius * distance)) //terminate at sub-pixel width; radius is taken within the pixel and therefore not accurate, but good enough; this also does the AA but also introduces banding
 		{
-			return 1;
+			return true;
 		}
 
 		if (distance > max_distance) //terminate at max distance
 		{
-			return -1;
+			return false;
 		}
 	}
 
-	return -1;
+	return false;
 }
 
+/// <summary>
+/// On render thread represents on pixel. Writes a color into the pixels location within the buffer, if the ray tracing hits the fractal.
+/// </summary>
+/// <param name="pixel_num">The number of the pixel to render.</param>
+/// <param name="x">The x of the pixel to render.</param>
+/// <param name="y">The y of the pixel to render.</param>
 void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& y)
 {
+	//some const inits used to setup the tracing
 	const float u = float(x) / float(width - 1);
 	const float v = float(y) / float(height - 1);
 	const float s = u * 2.0f - 1.0f;
 	const float t = v * 2.0f - 1.0f;
 
-	float3& pixel = image[y*width+x];
+	float3& pixel = image[pixel_num];
 
 	//calculated the ray direction
 	float3 ray_dir = camera_view + camera_side * tan_hori * s + camera_up * tan_vert * t;
@@ -127,14 +154,13 @@ void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& 
 	float distance = 0.0f;
 	float3 fractal_pos = camera_pos;
 
-	int32_t res = rayTrace(fractal_pos, ray_dir, pixel_radius, distance);
+	bool res = rayTrace(fractal_pos, ray_dir, pixel_radius, distance);
 
-	if (res > 0) //we actually hit the fractal
+	if (res) //we actually hit the fractal
 	{
 		//gather attributes of the hit
-		float3 surface_normal = mandelboxGetNormal(fractal_pos);
-		surface_normal = glm::normalize(surface_normal);
 		float3 surface_color = mandelboxGetColor(fractal_pos);
+		float3 surface_normal = approxNormal(fractal_pos);
 		float surface_ao = approxAmbientOcclusion(fractal_pos, surface_normal);
 
 		float3 ambient_color = surface_color * surface_ao * 0.2f;
@@ -152,12 +178,24 @@ void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& 
 // Main                                    |
 //-----------------------------------------|
 
+/// <summary>
+/// Checks if str starts with the char sequence pre
+/// </summary>
+/// <param name="pre">The char sequence to check for.</param>
+/// <param name="str">The string which may or may not contain pre.</param>
+/// <returns>True if str starts with the sequence pre. False otherwise</returns>
 bool startsWith(const char *pre, const char *str) {
 	size_t len_pre = strlen(pre);
 	size_t len_str = strlen(str);
 	return len_str < len_pre ? false : strncmp(pre, str, len_pre) == 0;
 }
 
+/// <summary>
+/// Entry point
+/// </summary>
+/// <param name="argc">Number of commandline parameters.</param>
+/// <param name="argv">Command line parameters.</param>
+/// <returns>EXIT_FAILURE in case of an error. EXIT_SUCCESS otherwise.</returns>
 int32_t main(int32_t argc, char** argv)
 {
 	if(argc<2) 

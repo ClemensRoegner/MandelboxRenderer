@@ -1,5 +1,12 @@
 #include "fractal.h"
 
+/// <summary>
+/// Folds a point along an inner and outer radius.
+/// </summary>
+/// <param name="p">[IN/OUT] The point.</param>
+/// <param name="dr">[IN/OUT] The derivative that will change due to the fold.</param>
+/// <param name="min_radius_sq">The square of the minimal radius.</param>
+/// <param name="fixed_radius_sq">The fixed radius squared.</param>
 void sphereFold(float3& p, float& dr, const float& min_radius_sq, const float& fixed_radius_sq)
 {
 	float r2 = glm::dot(p, p);
@@ -19,11 +26,21 @@ void sphereFold(float3& p, float& dr, const float& min_radius_sq, const float& f
 	}
 }
 
+/// <summary>
+/// Folds a point along a boxes border.
+/// </summary>
+/// <param name="p">[IN/OUT] The point.</param>
+/// <param name="folding_limit">The boxes limits.</param>
 void boxFold(float3& p, const float& folding_limit)
 {
 	p = glm::clamp(p, -folding_limit, folding_limit) * 2.0f - p;
 }
 
+/// <summary>
+/// Returns the distance to the closest point of the mandelbox fractal for a given position.
+/// </summary>
+/// <param name="pos">The position.</param>
+/// <returns>Distance to the closest point within the fractal</returns>
 float mandelBoxGetDistance(const float3& pos)
 {
 	float3 p = pos;
@@ -43,6 +60,11 @@ float mandelBoxGetDistance(const float3& pos)
 	return glm::length(p) / abs(dr);
 }
 
+/// <summary>
+/// Cartesian to spherical coordinate conversion.
+/// </summary>
+/// <param name="xyz">Cartesian coordinates.</param>
+/// <returns>Spherical Coordinates</returns>
 float3 CartesianToSpherical(float3 xyz) {
 
 	float r = glm::length(xyz);
@@ -54,6 +76,11 @@ float3 CartesianToSpherical(float3 xyz) {
 	return float3(phi, theta, r);
 }
 
+/// <summary>
+/// Calculates the color of a point in the fractal by using an orbit trap, which is a fractal within itself
+/// </summary>
+/// <param name="pos">The position on the mandelbox fractal.</param>
+/// <returns>A linear color for the surface point.</returns>
 float3 mandelboxGetColor(const float3& pos)
 {
 	float3 p = pos;
