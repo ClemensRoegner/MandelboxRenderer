@@ -41,7 +41,7 @@ float fov = 0.3f * PI; //horizontal
 float tan_hori = glm::tan(fov);
 float tan_vert = glm::tan(fov);
 
-float ao_offset = 0.05f;
+float ao_radius = 0.05f;
 
 //-----------------------------------------|
 // functions for ray tracing and image     |
@@ -84,8 +84,9 @@ float3 approxNormal(const float3& pos)
 /// <param name="pos">The position on the fractal for which the AO should be approximated.</param>
 /// <param name="normal">The surface normal for pos.</param>
 /// <returns>A value from 0 up to 1 representaing the AO</returns>
-float approxAmbientOcclusion(const float3& pos, const float3& normal)
+float approxAmbientOcclusion(const float3& pos, const float3& normal, const float& ao_distance)
 {
+	const float ao_offset = ao_distance / ao_steps;
 	float walked_dist = ao_offset; //we need to offset from the start since we are approximating the fractal via a distance threshold
 	for (float i = 0.0f; i < ao_steps; i += 1.0f) //simple ray marching
 	{
@@ -161,7 +162,7 @@ void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& 
 		//gather attributes of the hit
 		float3 surface_color = mandelboxGetColor(fractal_pos);
 		float3 surface_normal = approxNormal(fractal_pos);
-		float surface_ao = approxAmbientOcclusion(fractal_pos, surface_normal);
+		float surface_ao = approxAmbientOcclusion(fractal_pos, surface_normal, ao_radius); //for simplicity we use a global radius
 
 		float3 ambient_color = surface_color * surface_ao * 0.2f;
 		float3 diffuse_color = surface_color * 0.4f;
@@ -203,8 +204,6 @@ int32_t main(int32_t argc, char** argv)
 		std::cout << "You must at least define the name of the output file!" << std::endl;
 		return EXIT_FAILURE;
 	}
-
-	int32_t ret = 0;
 
 	//read command line
 	for (int32_t argn = 2; argn < argc; argn++)
@@ -268,7 +267,7 @@ int32_t main(int32_t argc, char** argv)
 			int32_t res = sscanf(arg + 3, "%f", &tmp);
 			if (res == 1)
 			{
-				ao_offset = tmp;
+				ao_radius = glm::clamp(tmp,EPS,4.0f);
 			}
 		}
 	}
@@ -293,11 +292,11 @@ int32_t main(int32_t argc, char** argv)
 	}
 
 	//write the image to the file and delete the buffer
-	ret = saveFloatImagePFM(argv[1], (float*)image, width, height);
+	bool chk = saveFloatImagePFM(argv[1], (float*)image, width, height);
 
 	safe_delete_a(image);
 
-	if (ret < 0)
+	if (chk == false)
 	{
 		std::cout << "Writing the output file went wrong!" << std::endl;
 		return EXIT_FAILURE;

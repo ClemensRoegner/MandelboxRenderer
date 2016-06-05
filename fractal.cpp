@@ -44,20 +44,21 @@ void boxFold(float3& p, const float& folding_limit)
 float mandelBoxGetDistance(const float3& pos)
 {
 	float3 p = pos;
-	float scale = 2.0f;
 	float3 offset = p;
 	float dr = 1.0f;
+
+	const float scale = 2.0f; //original mandelbox parameter. Must be positive
 
 	for (uint32_t i = 0; i < fractal_iterations; i++)
 	{
 		boxFold(p, 1.0f);
-		sphereFold(p, dr, 0.25f, 1.0f);
+		sphereFold(p, dr, 0.25f, 1.0f);  //original mandelbox parameters
 
 		p = p*scale + offset;
-		dr = dr*abs(scale) + 1.0f;
+		dr = dr*scale + 1.0f;
 	}
 
-	return glm::length(p) / abs(dr);
+	return glm::length(p) / glm::abs(dr);
 }
 
 /// <summary>
@@ -77,7 +78,7 @@ float3 CartesianToSpherical(float3 xyz) {
 }
 
 /// <summary>
-/// Calculates the color of a point in the fractal by using an orbit trap, which is a fractal within itself
+/// Calculates the color of a point in the fractal by using an orbit trap, which is a fractal within itself. This function is a work of trial and error.
 /// </summary>
 /// <param name="pos">The position on the mandelbox fractal.</param>
 /// <returns>A linear color for the surface point.</returns>
@@ -85,9 +86,9 @@ float3 mandelboxGetColor(const float3& pos)
 {
 	float3 p = pos;
 	float dr = 1.0f;
-	for (uint32_t i = 0; i < trap_iterations; i++) {
+	for (uint32_t i = 0; i < trap_iterations; i++) { //mandelbox iterations
 		boxFold(p, 1.0f);
-		sphereFold(p, dr, 0.25f, 1.0f);
+		sphereFold(p, dr, 0.25f, 1.0f); //original mandelbox parameters
 	}
 	return glm::normalize(glm::abs(p));
 }
