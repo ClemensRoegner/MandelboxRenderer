@@ -168,8 +168,9 @@ void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& 
 		//gather attributes of the hit
 		float3 surface_color = mandelboxGetColor(fractal_pos);
 		float3 surface_normal = approxNormal(fractal_pos);
-		float surface_ao = approxAmbientOcclusion(fractal_pos, surface_normal, ao_radius); //for simplicity we use a global radius
+		float surface_ao = approxAmbientOcclusion(fractal_pos, surface_normal, ao_radius); //for simplicity we use a global radius. This can be tuned to adjust for the 'zoom' in the given camera setup
 
+		//just some random values for our fractal regarding the shading
 		float3 ambient_color = surface_color * surface_ao * 0.2f;
 		float3 diffuse_color = surface_color * 0.4f;
 		float3 specular_color = float3(1,1,1) * 0.4f;
@@ -177,6 +178,7 @@ void renderThread(const uint32_t& pixel_num, const uint32_t& x, const uint32_t& 
 		//do the lighting and write to our image buffer
 		float3 blinn_phong = brdfBlinnPhong(surface_normal, ambient_color, diffuse_color, specular_color, -ray_dir, light_dir, light_color);
 
+		//SRGB correction
 		pixel = glm::pow(blinn_phong, float3(inverse_gamma, inverse_gamma, inverse_gamma));
 	}
 }
@@ -284,9 +286,17 @@ int32_t main(int32_t argc, char** argv)
 	tan_hori = glm::tan(fov);
 	tan_vert = tan_hori * screen_ratio;
 	
-	image = new float3[width*height]; //TODO do allocation check
-	std::memset(image, 0, sizeof(float3)*width*height);
+	//buffer management
+	const size_t buffer_size = sizeof(float3)*width*height;
+	image = (float3*) std::malloc(buffer_size);
+	if (image == nullptr)
+	{
+		std::cout << "Could not allocate the necessary memory for the image buffer!" << std::endl;
+		return EXIT_FAILURE;
+	}
+	std::memset(image, 0, buffer_size);
 
+	//kick off the rendering
 	#pragma omp parallel for schedule(dynamic,1)
 	for (int32_t pixel_num = 0; pixel_num < pixel_count; pixel_num++) 
 	{
@@ -308,5 +318,6 @@ int32_t main(int32_t argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
+	std::cout << "Finished Rendering!" << std::endl;
 	return EXIT_SUCCESS;
 }

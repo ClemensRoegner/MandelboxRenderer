@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include "defines.h"
 
-const uint32_t fractal_iterations = 25;
+const uint32_t fractal_iterations = 25; //those values seem good enough for our purposes. You dont wanna go too high, as calculatiosn would increase
 const uint32_t trap_iterations = 5;
 
 float mandelBoxGetDistance(const float3& pos);

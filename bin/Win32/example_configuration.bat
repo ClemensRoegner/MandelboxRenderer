@@ -1,0 +1,1 @@
+mandelboxrenderer.exe output.pfm width:1280 height:720 cam:back
