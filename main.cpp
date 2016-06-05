@@ -200,6 +200,18 @@ bool startsWith(const char *pre, const char *str) {
 }
 
 /// <summary>
+/// Checks if str ends with the char sequence post
+/// </summary>
+/// <param name="post">The char sequence to check for.</param>
+/// <param name="str">The string which may or may not contain post.</param>
+/// <returns>True if str ends with the sequence pre. False otherwise</returns>
+bool endsWith(const char *post, const char *str) {
+	size_t len_post = strlen(post);
+	size_t len_str = strlen(str);
+	return len_str < len_post ? false : strncmp(post, str + (len_str - len_post), len_post) == 0;
+}
+
+/// <summary>
 /// Entry point
 /// </summary>
 /// <param name="argc">Number of commandline parameters.</param>
@@ -308,7 +320,12 @@ int32_t main(int32_t argc, char** argv)
 	}
 
 	//write the image to the file and delete the buffer
-	bool chk = saveFloatImagePFM(argv[1], (float*)image, width, height);
+	bool chk = false;
+	
+	if(endsWith(".bmp",argv[1]))
+		chk = saveFloatImageBMP(argv[1], (float*)image, width, height);
+	else
+		chk = saveFloatImagePFM(argv[1], (float*)image, width, height);
 
 	safe_delete_a(image);
 

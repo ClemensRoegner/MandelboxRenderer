@@ -1,0 +1,1 @@
+mandelboxrenderer.exe output.bmp width:1280 height:720 cam:back

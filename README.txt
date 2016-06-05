@@ -1,5 +1,5 @@
 MandelboxRender
-by Clemens Roegner
+by Clemens Roegner (http://clemensroegner.github.io/)
 
 -------------------------------
 --    Project Description    --
@@ -15,6 +15,9 @@ MandelboxRenderer is a small and very simplistic renderer written in C++ that le
  * PFM file format: http://www.pauldebevec.com/Research/HDR/PFM/
  * Mandelbox description: https://sites.google.com/site/mandelbox/what-is-a-mandelbox
 
+--> Repository
+ * https://github.com/ClemensRoegner/MandelboxRenderer/
+
 -------------------------------
 --           Usage           --
 -------------------------------
@@ -26,7 +29,7 @@ MandelboxRenderer is a small and very simplistic renderer written in C++ that le
 
 --> Run
 The executable takes the following parameters (seperated via a blank):
-* [REQUIRED] <filename> - the first parameter passed to the application must be a valid file location.
+* [REQUIRED] <filename> - the first parameter passed to the application must be a valid file location. Use the ending .bmp to save as a bitmap file. All other endings will result in a PFM file.
 * [OPTIONAL] width:<pixels> - Width of the desired image in pixels
 * [OPTIONAL] height:<pixels> - Height of the desired image in pixels
 * [OPTIONAL] fov:<degrees> - Field of view of the camera. Allowed range: from 30 to 120 degrees (clamped automatically)
@@ -34,5 +37,6 @@ The executable takes the following parameters (seperated via a blank):
 * [OPTIONAL] cam:<position> - The camera position. You can choose between the positions: front, edge and back or do not use it for the default camera position.
 
 --> View Results
- * In the tools/ directory you find the HDRView.exe thats lets you display the image file under Windows
+ * You have the option to output a BMP file by changing the ending of the filename commandline parameter. Most image viewers can display that format.
+ * In the tools/ directory you find the HDRView.exe thats lets you display the .PFM image file under Windows
  * XnView runs on multiple platforms and can display the .pfm format as well: http://www.xnview.com/en/xnview/#downloads (Minimal installation is sufficient)
