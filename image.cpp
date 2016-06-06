@@ -7,8 +7,11 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <vector>
-#include "cimg\CImg.h"
 #include "defines.h"
+
+//use CImg just for saving a BMP file
+#define cimg_display 0
+#include "cimg\CImg.h"
 
 /// <summary>
 /// Saves a buffer of float triplets to a file on the disk using the .PFM format. This function follows the definition of the PFM format, described by Paul Debevec at http://www.pauldebevec.com/Research/HDR/PFM/
